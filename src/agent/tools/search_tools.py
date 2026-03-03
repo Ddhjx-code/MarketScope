@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, Type
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
-from src.search_service import SearchService
+from src.search_service import get_search_service
 
 
 class SearchMarketSizeInput(BaseModel):
@@ -10,18 +10,21 @@ class SearchMarketSizeInput(BaseModel):
 
 class SearchMarketSizeTool(BaseTool):
     """搜索市场规模数据的工具"""
-    name = "search_market_size"
-    description = "获取特定行业的市场规模、用户数量、增长率等数据"
-    args_schema = SearchMarketSizeInput
+    name: str = "search_market_size"
+    description: str = "获取特定行业的市场规模、用户数量、增长率等数据"
+    args_schema: Type[BaseModel] = SearchMarketSizeInput
     
-    def __init__(self):
-        super().__init__()
-        self.search_service = SearchService()
-
     def _run(self, industry: str) -> str:
         """执行工具"""
-        results = self.search_service.search_market_size(industry)
-        return f"关于{industry}市场规模的搜索结果: {results}"
+        search_service = get_search_service()
+        if not search_service.is_available:
+            return "搜索服务不可用（未配置API Key）"
+
+        response = search_service.search_market_size(industry)
+        if response.success:
+            return response.to_context()
+        else:
+            return f"搜索失败: {response.error_message}"
 
 
 class SearchCompetitorsInput(BaseModel):
@@ -30,18 +33,21 @@ class SearchCompetitorsInput(BaseModel):
 
 class SearchCompetitorsTool(BaseTool):
     """搜索竞争对手信息的工具"""
-    name = "search_competitors"
-    description = "获取特定类型APP的主要竞争对手、功能对比、市场份额等信息"
-    args_schema = SearchCompetitorsInput
+    name: str = "search_competitors"
+    description: str = "获取特定类型APP的主要竞争对手、功能对比、市场份额等信息"
+    args_schema: Type[BaseModel] = SearchCompetitorsInput
     
-    def __init__(self):
-        super().__init__()
-        self.search_service = SearchService()
-
     def _run(self, app_type: str) -> str:
         """执行工具"""
-        results = self.search_service.search_competitors(app_type)
-        return f"关于{app_type}竞品的搜索结果: {results}"
+        search_service = get_search_service()
+        if not search_service.is_available:
+            return "搜索服务不可用（未配置API Key）"
+
+        response = search_service.search_competitors(app_type)
+        if response.success:
+            return response.to_context()
+        else:
+            return f"搜索失败: {response.error_message}"
 
 
 class SearchTrendsInput(BaseModel):
@@ -50,18 +56,21 @@ class SearchTrendsInput(BaseModel):
 
 class SearchTrendsTool(BaseTool):
     """搜索行业趋势的工具"""
-    name = "search_trends"
-    description = "获取特定行业的发展趋势、技术方向、未来预测等信息"
-    args_schema = SearchTrendsInput
+    name: str = "search_trends"
+    description: str = "获取特定行业的发展趋势、技术方向、未来预测等信息"
+    args_schema: Type[BaseModel] = SearchTrendsInput
     
-    def __init__(self):
-        super().__init__()
-        self.search_service = SearchService()
-
     def _run(self, industry: str) -> str:
         """执行工具"""
-        results = self.search_service.search_trends(industry)
-        return f"关于{industry}趋势的搜索结果: {results}"
+        search_service = get_search_service()
+        if not search_service.is_available:
+            return "搜索服务不可用（未配置API Key）"
+
+        response = search_service.search_trends(industry)
+        if response.success:
+            return response.to_context()
+        else:
+            return f"搜索失败: {response.error_message}"
 
 
 class AnalyzeUserDemandInput(BaseModel):
@@ -70,20 +79,17 @@ class AnalyzeUserDemandInput(BaseModel):
 
 class AnalyzeUserDemandTool(BaseTool):
     """分析用户需求的工具"""
-    name = "analyze_user_demand"
-    description = "分析特定类型APP的用户痛点、需求变化、用户行为等信息"
-    args_schema = AnalyzeUserDemandInput
+    name: str = "analyze_user_demand"
+    description: str = "分析特定类型APP的用户痛点、需求变化、用户行为等信息"
+    args_schema: Type[BaseModel] = AnalyzeUserDemandInput
     
-    def __init__(self):
-        super().__init__()
-        self.search_service = get_search_service()
-
     def _run(self, app_type: str) -> str:
         """执行工具"""
-        if not self.search_service.is_available:
+        search_service = get_search_service()
+        if not search_service.is_available:
             return "搜索服务不可用（未配置API Key）"
 
-        response = self.search_service.analyze_user_demand(app_type)
+        response = search_service.analyze_user_demand(app_type)
         if response.success:
             return response.to_context()
         else:
