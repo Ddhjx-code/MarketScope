@@ -76,9 +76,15 @@ class AnalyzeUserDemandTool(BaseTool):
     
     def __init__(self):
         super().__init__()
-        self.search_service = SearchService()
+        self.search_service = get_search_service()
 
     def _run(self, app_type: str) -> str:
         """执行工具"""
-        results = self.search_service.analyze_user_demand(app_type)
-        return f"关于{app_type}用户需求的分析结果: {results}"
+        if not self.search_service.is_available:
+            return "搜索服务不可用（未配置API Key）"
+
+        response = self.search_service.analyze_user_demand(app_type)
+        if response.success:
+            return response.to_context()
+        else:
+            return f"搜索失败: {response.error_message}"

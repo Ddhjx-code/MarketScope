@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from src.agent.executor import AgentExecutor
-from src.search_service import SearchService
+from src.search_service import SearchService, get_search_service
 
 
 class IndustryAnalyzer:
@@ -8,7 +8,7 @@ class IndustryAnalyzer:
 
     def __init__(self):
         """初始化分析器"""
-        self.search_service = SearchService()
+        self.search_service = get_search_service()
         self.agent_executor = AgentExecutor()
 
     def analyze(self, user_input: str) -> Dict[str, Any]:

@@ -18,6 +18,7 @@ class Config:
     # 搜索配置
     MAX_SEARCH_RESULTS = int(os.getenv("MAX_SEARCH_RESULTS", "5"))
     SEARCH_TIMEOUT = int(os.getenv("SEARCH_TIMEOUT", "10"))
+    NEWS_MAX_AGE_DAYS = int(os.getenv("NEWS_MAX_AGE_DAYS", "7"))
     
     # 系统配置
     DEBUG = os.getenv("DEBUG", "False").lower() == "true"
