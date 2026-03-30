@@ -6,6 +6,14 @@ from .search_tools import (
     SearchTrendsTool,
     AnalyzeUserDemandTool
 )
+from .national_stats_tools import (
+    SearchNationalStatsTool,
+    GetStatsCategoriesTool,
+    GetStatsLeafCategoriesTool,
+    GetStatsTimeOptionsTool,
+    GetStatsDataTool,
+    BatchGetStatsTool
+)
 
 
 class ToolRegistry:
@@ -22,9 +30,15 @@ class ToolRegistry:
             SearchMarketSizeTool,
             SearchCompetitorsTool,
             SearchTrendsTool,
-            AnalyzeUserDemandTool
+            AnalyzeUserDemandTool,
+            SearchNationalStatsTool,
+            GetStatsCategoriesTool,
+            GetStatsLeafCategoriesTool,
+            GetStatsTimeOptionsTool,
+            GetStatsDataTool,
+            BatchGetStatsTool
         ]
-        
+
         for tool_class in default_tools:
             self.register_tool(tool_class)
 
