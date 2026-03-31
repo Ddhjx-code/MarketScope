@@ -1,12 +1,20 @@
-"""Prompt quality tests - verify prompts lead to correct tool usage.
+"""Prompt 质量测试 - 验证提示词能否引导正确的工具调用。
 
-These tests use the REAL LLM and are marked @pytest.mark.slow.
-Run with: pytest tests/test_prompt_quality.py -v --run-slow
+测试内容：
+- Research Agent 是否调用所有 4 个搜索工具
+- Agent 是否根据 APP 类型调整查询内容
+- 输出报告是否包含关键章节
+- 不同场景（社交/电商）的回归测试
+
+注意：使用真实 LLM 调用，标记 @pytest.mark.slow
+运行方式: pytest tests/test_prompt_quality.py -v --run-slow
 """
 import pytest
+import os
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
 class TestPromptQuality:
     """Verify that prompts lead to correct Agent behavior."""
 
@@ -60,6 +68,7 @@ class TestPromptQuality:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
 class TestPromptRegression:
     """Detect prompt changes that break expected behavior."""
 

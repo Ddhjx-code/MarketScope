@@ -1,4 +1,12 @@
-"""ToolRegistry unit tests - pure code logic, no LLM calls."""
+"""ToolRegistry 单元测试 - 纯代码逻辑，无 LLM 调用。
+
+测试内容：
+- 注册表初始化与默认工具注册
+- 搜索工具和国家统计工具的完整性
+- 工具唯一性、名称/描述属性检查
+- 自定义工具注册
+- 获取不存在工具的处理
+"""
 import pytest
 from src.agent.tools.registry import ToolRegistry
 

@@ -1,4 +1,11 @@
-"""Tool contract tests - verify each tool's interface and return format."""
+"""工具契约测试 - 验证每个工具的接口和返回格式。
+
+测试内容：
+- 4 个搜索工具的 name/description/args_schema 正确性
+- 6 个国家统计工具的接口完整性
+- 统计工具返回 MCP_REQUEST JSON 格式
+- 搜索工具返回非空字符串
+"""
 import pytest
 from src.agent.tools.registry import ToolRegistry
 
@@ -38,16 +45,25 @@ class TestSearchToolContracts:
         assert "需求" in tool.description or "demand" in tool.description.lower()
         assert hasattr(tool, "args_schema")
 
-    def test_search_tools_accept_query_parameter(self):
-        """All search tools should accept a 'query' parameter."""
-        search_tools = ["search_market_size", "search_competitors", "search_trends", "analyze_user_demand"]
-        for tool_name in search_tools:
+    def test_search_tools_accept_correct_parameters(self):
+        """Search tools should accept their specific parameters (industry or app_type)."""
+        # Tools that use 'industry' parameter
+        industry_tools = ["search_market_size", "search_trends"]
+        for tool_name in industry_tools:
             tool = self.registry.get_tool(tool_name)
             assert tool is not None
-            # Check the tool has an args_schema with query field
             if hasattr(tool, "args_schema") and tool.args_schema is not None:
                 schema_fields = tool.args_schema.model_fields if hasattr(tool.args_schema, "model_fields") else {}
-                assert "query" in schema_fields, f"{tool_name} missing 'query' parameter"
+                assert "industry" in schema_fields, f"{tool_name} missing 'industry' parameter"
+
+        # Tools that use 'app_type' parameter
+        app_type_tools = ["search_competitors", "analyze_user_demand"]
+        for tool_name in app_type_tools:
+            tool = self.registry.get_tool(tool_name)
+            assert tool is not None
+            if hasattr(tool, "args_schema") and tool.args_schema is not None:
+                schema_fields = tool.args_schema.model_fields if hasattr(tool.args_schema, "model_fields") else {}
+                assert "app_type" in schema_fields, f"{tool_name} missing 'app_type' parameter"
 
 
 class TestNationalStatsToolContracts:
@@ -96,17 +112,18 @@ class TestNationalStatsToolContracts:
     def test_national_stats_tools_return_mcp_request_format(self):
         """National stats tools should return MCP request JSON when invoked."""
         import json
-        stats_tools = [
-            "search_national_stats",
-            "get_stats_categories",
-            "get_stats_leaf_categories",
-            "get_stats_time_options",
-            "get_stats_data",
-            "batch_get_stats"
-        ]
-        for tool_name in stats_tools:
+        # Each tool has different required parameters
+        tool_params = {
+            "search_national_stats": {"keyword": "test"},
+            "get_stats_categories": {"dbcode": "hgnd"},
+            "get_stats_leaf_categories": {"dbcode": "hgnd"},
+            "get_stats_time_options": {"dbcode": "hgnd"},
+            "get_stats_data": {"zb": "test", "dbcode": "hgnd"},
+            "batch_get_stats": {"queries": [{"zb": "test", "dbcode": "hgnd"}]},
+        }
+        for tool_name, params in tool_params.items():
             tool = self.registry.get_tool(tool_name)
-            result = tool.invoke({"query": "test"})
+            result = tool.invoke(params)
             parsed = json.loads(result)
             assert parsed["status"] == "MCP_CALL_REQUESTED"
             assert "tool" in parsed
@@ -119,9 +136,15 @@ class TestToolReturnFormats:
     def test_search_tools_return_non_empty_strings(self):
         """Search tools should return non-empty strings when invoked."""
         registry = ToolRegistry()
-        search_tools = ["search_market_size", "search_competitors", "search_trends", "analyze_user_demand"]
-        for tool_name in search_tools:
+        # Industry-based tools
+        for tool_name in ["search_market_size", "search_trends"]:
             tool = registry.get_tool(tool_name)
-            result = tool.invoke({"query": "test"})
+            result = tool.invoke({"industry": "test"})
+            assert isinstance(result, str), f"{tool_name} should return string"
+            assert len(result) > 0, f"{tool_name} returned empty string"
+        # App-type-based tools
+        for tool_name in ["search_competitors", "analyze_user_demand"]:
+            tool = registry.get_tool(tool_name)
+            result = tool.invoke({"app_type": "test"})
             assert isinstance(result, str), f"{tool_name} should return string"
             assert len(result) > 0, f"{tool_name} returned empty string"

@@ -131,3 +131,97 @@ class TestSearchService:
         is_available = self.search_service.is_available
         # 检查返回类型是布尔值
         assert isinstance(is_available, bool)
+
+
+class TestSearchServiceCache:
+    """Test SearchService caching behavior with mocked providers."""
+
+    def _make_service(self):
+        """Create SearchService with no real providers."""
+        from src.search_service import SearchService
+        return SearchService(tavily_keys=None)
+
+    def test_cache_key_includes_all_params(self):
+        """Cache key should include query, max_results, and days."""
+        service = self._make_service()
+        key1 = service._cache_key("test", 5, 7)
+        key2 = service._cache_key("test", 10, 7)
+        key3 = service._cache_key("test", 5, 14)
+        assert key1 != key2
+        assert key1 != key3
+        assert key2 != key3
+
+    def test_cache_hit_returns_cached_response(self):
+        """Should return cached response on cache hit."""
+        from src.search_service import SearchResponse
+        import time
+
+        service = self._make_service()
+        # Manually put a response in cache
+        cached_response = SearchResponse(query="test", results=[], provider="Test", success=True)
+        key = service._cache_key("test", 5, 7)
+        service._cache[key] = (time.time(), cached_response)
+
+        result = service._get_cached(key)
+        assert result is not None
+        assert result.success is True
+
+    def test_cache_miss_returns_none(self):
+        """Should return None on cache miss."""
+        service = self._make_service()
+        result = service._get_cached("nonexistent_key")
+        assert result is None
+
+    def test_cache_ttl_expiry(self):
+        """Should expire cached entries after TTL."""
+        from src.search_service import SearchResponse
+        import time
+
+        service = self._make_service()
+        service._cache_ttl = 1  # 1 second TTL
+        cached_response = SearchResponse(query="test", results=[], provider="Test", success=True)
+        key = service._cache_key("test", 5, 7)
+        # Insert with expired timestamp
+        service._cache[key] = (time.time() - 2, cached_response)
+
+        result = service._get_cached(key)
+        assert result is None
+        assert key not in service._cache  # Should have been deleted
+
+    def test_cache_eviction_on_overflow(self):
+        """Should evict oldest entries when cache exceeds max size."""
+        from src.search_service import SearchResponse
+        import time
+
+        service = self._make_service()
+        # The cache limit is 500 (hardcoded in _put_cache)
+        MAX_CACHE_SIZE = 500
+        # Fill cache to the limit
+        for i in range(MAX_CACHE_SIZE):
+            key = f"key_{i}"
+            response = SearchResponse(query=f"q{i}", results=[], provider="Test", success=True)
+            service._cache[key] = (time.time(), response)
+
+        assert len(service._cache) == MAX_CACHE_SIZE
+
+        # Adding one more should trigger eviction
+        extra_key = "extra_key"
+        extra_response = SearchResponse(query="extra", results=[], provider="Test", success=True)
+        service._put_cache(extra_key, extra_response)
+
+        assert len(service._cache) <= MAX_CACHE_SIZE
+        assert extra_key in service._cache  # New entry should be present
+
+    def test_put_cache_stores_response(self):
+        """Should store response in cache."""
+        from src.search_service import SearchResponse
+
+        service = self._make_service()
+        response = SearchResponse(query="test", results=[], provider="Test", success=True)
+        key = "test_key"
+        service._put_cache(key, response)
+
+        assert key in service._cache
+        stored_ts, stored_response = service._cache[key]
+        assert stored_response.success is True
+        assert stored_response.query == "test"

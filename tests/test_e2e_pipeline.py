@@ -1,9 +1,16 @@
-"""End-to-end pipeline tests - verify complete analysis flow.
+"""端到端流水线测试 - 验证完整分析流程。
 
-These tests use the REAL LLM and are marked @pytest.mark.slow.
-Run with: pytest tests/test_e2e_pipeline.py -v --run-slow
+测试内容：
+- 3 种典型 APP（社交/工具/电商）的报告 schema 验证
+- 报告是否包含可执行的建议
+- 是否正确识别竞争对手
+- Mock 模式下的快速流水线测试
+
+注意：完整测试使用真实 LLM，标记 @pytest.mark.slow
+运行方式: pytest tests/test_e2e_pipeline.py -v --run-slow
 """
 import pytest
+import os
 
 REPORT_SCHEMA_KEYS = {
     "app_type",
@@ -58,6 +65,7 @@ def validate_report_schema(report: dict) -> list:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
 class TestE2EPipeline:
     """End-to-end tests for complete analysis pipeline."""
 
@@ -137,4 +145,4 @@ class TestPipelineWithMockedLLM:
         analyzer = IndustryAnalyzer()
         with patch.object(analyzer.agent_executor, 'execute', side_effect=Exception("Test error")):
             result = analyzer.analyze(sample_user_input)
-        assert "error" in result or result is not None
+        assert "error" in result

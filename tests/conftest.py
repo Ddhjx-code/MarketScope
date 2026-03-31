@@ -1,4 +1,14 @@
-"""Shared test fixtures for MarketScope tests."""
+"""共享测试 fixture - 为所有测试提供样本数据和 mock 对象。
+
+提供的 fixture：
+- sample_user_input: 标准测试输入
+- mock_search_results: 固定搜索结果
+- mock_raw_data: Research Agent 输出
+- mock_structured_analysis: Analysis Agent 输出
+- mock_final_report: Report Agent 输出
+- tool_registry/search_service: 实例 fixture
+- mock_llm/mock_executor: Mock 对象
+"""
 import pytest
 from unittest.mock import MagicMock, patch
 
