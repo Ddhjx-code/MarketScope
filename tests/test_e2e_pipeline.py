@@ -71,40 +71,40 @@ class TestE2EPipeline:
 
     def test_social_app_report_schema(self):
         """Social app analysis should produce a valid report."""
-        from src.agent.executor import AgentExecutor
+        from src.analyzer import IndustryAnalyzer
 
-        executor = AgentExecutor()
-        result = executor.execute("社交类APP，主要功能是兴趣小组聊天")
+        analyzer = IndustryAnalyzer()
+        result = analyzer.analyze("社交类APP，主要功能是兴趣小组聊天")
 
         errors = validate_report_schema(result)
         assert len(errors) == 0, f"Report schema validation failed: {errors}"
 
     def test_tool_app_report_schema(self):
         """Tool app analysis should produce a valid report."""
-        from src.agent.executor import AgentExecutor
+        from src.analyzer import IndustryAnalyzer
 
-        executor = AgentExecutor()
-        result = executor.execute("工具类APP，主要功能是个人记账和预算管理")
+        analyzer = IndustryAnalyzer()
+        result = analyzer.analyze("工具类APP，主要功能是个人记账和预算管理")
 
         errors = validate_report_schema(result)
         assert len(errors) == 0, f"Report schema validation failed: {errors}"
 
     def test_ecommerce_app_report_schema(self):
         """E-commerce app analysis should produce a valid report."""
-        from src.agent.executor import AgentExecutor
+        from src.analyzer import IndustryAnalyzer
 
-        executor = AgentExecutor()
-        result = executor.execute("电商类APP，主要功能是二手商品交易")
+        analyzer = IndustryAnalyzer()
+        result = analyzer.analyze("电商类APP，主要功能是二手商品交易")
 
         errors = validate_report_schema(result)
         assert len(errors) == 0, f"Report schema validation failed: {errors}"
 
     def test_report_contains_actionable_recommendations(self):
         """Report should contain specific, actionable recommendations."""
-        from src.agent.executor import AgentExecutor
+        from src.analyzer import IndustryAnalyzer
 
-        executor = AgentExecutor()
-        result = executor.execute("社交类APP，主要功能是兴趣小组聊天")
+        analyzer = IndustryAnalyzer()
+        result = analyzer.analyze("社交类APP，主要功能是兴趣小组聊天")
 
         recommendations = result.get("recommendations", {})
         assert len(str(recommendations.get("strategy", ""))) > 20, \
@@ -114,10 +114,10 @@ class TestE2EPipeline:
 
     def test_report_identifies_competitors(self):
         """Report should identify real competitors for the given APP type."""
-        from src.agent.executor import AgentExecutor
+        from src.analyzer import IndustryAnalyzer
 
-        executor = AgentExecutor()
-        result = executor.execute("社交类APP，主要功能是兴趣小组聊天")
+        analyzer = IndustryAnalyzer()
+        result = analyzer.analyze("社交类APP，主要功能是兴趣小组聊天")
 
         competitors = result.get("competitor_analysis", {}).get("top_players", [])
         assert isinstance(competitors, list), "top_players should be a list"
@@ -133,7 +133,7 @@ class TestPipelineWithMockedLLM:
         from unittest.mock import patch, MagicMock
 
         analyzer = IndustryAnalyzer()
-        with patch.object(analyzer.agent_executor, 'execute', return_value=mock_raw_data):
+        with patch.object(analyzer.pipeline, 'run', return_value=mock_raw_data):
             result = analyzer.analyze(sample_user_input)
         assert isinstance(result, dict)
 
@@ -143,6 +143,6 @@ class TestPipelineWithMockedLLM:
         from unittest.mock import patch
 
         analyzer = IndustryAnalyzer()
-        with patch.object(analyzer.agent_executor, 'execute', side_effect=Exception("Test error")):
+        with patch.object(analyzer.pipeline, 'run', side_effect=Exception("Test error")):
             result = analyzer.analyze(sample_user_input)
         assert "error" in result

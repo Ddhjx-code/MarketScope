@@ -11,6 +11,10 @@
 """
 import pytest
 from unittest.mock import MagicMock, patch
+from dotenv import load_dotenv
+
+# 加载 .env 文件中的环境变量（包括 OPENAI_API_KEY）
+load_dotenv()
 
 
 @pytest.fixture
