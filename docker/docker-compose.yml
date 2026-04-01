@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  marketscope:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: marketscope
+    env_file:
+      - .env
+    volumes:
+      - ./.env:/app/.env:ro
+    # 运行方式：
+    #   默认输入: docker compose run --rm marketscope
+    #   自定义输入: docker compose run --rm marketscope "电商类APP，主要功能是二手商品交易"
+    #   列出工具: docker compose run --rm marketscope --list-tools

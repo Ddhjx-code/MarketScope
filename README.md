@@ -66,6 +66,22 @@ print(result)
 python main.py
 ```
 
+### Docker 部署
+
+```bash
+# 构建镜像
+docker compose build
+
+# 运行（默认输入）
+docker compose run --rm marketscope
+
+# 自定义输入
+docker compose run --rm marketscope "电商类APP，主要功能是二手商品交易"
+
+# 列出可用工具
+docker compose run --rm marketscope --list-tools
+```
+
 ## 架构
 
 ### 三阶段流水线
